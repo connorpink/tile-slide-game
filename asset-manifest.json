@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/tile-slide-game/static/css/main.06d23ea1.css",
-    "main.js": "/tile-slide-game/static/js/main.655ca791.js",
+    "main.js": "/tile-slide-game/static/js/main.af4964bc.js",
     "static/js/453.711150db.chunk.js": "/tile-slide-game/static/js/453.711150db.chunk.js",
     "index.html": "/tile-slide-game/index.html",
     "main.06d23ea1.css.map": "/tile-slide-game/static/css/main.06d23ea1.css.map",
-    "main.655ca791.js.map": "/tile-slide-game/static/js/main.655ca791.js.map",
+    "main.af4964bc.js.map": "/tile-slide-game/static/js/main.af4964bc.js.map",
     "453.711150db.chunk.js.map": "/tile-slide-game/static/js/453.711150db.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.06d23ea1.css",
-    "static/js/main.655ca791.js"
+    "static/js/main.af4964bc.js"
   ]
 }
