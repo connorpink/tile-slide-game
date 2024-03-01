@@ -195,14 +195,14 @@ class App extends Component {
         <button id="menuButton" onClick={this.resetGame}>
           Reset Board
         </button>
-        
+        {/*
         <button id="menuButton" onClick={this.setWinningState}>
           Set Winning State
         </button>
         <button id="menuButton" onClick={this.resetHighScore}>
           Reset High Score
         </button>
-        
+              */}
       </div>
     );
   }
