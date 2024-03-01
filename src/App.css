@@ -59,16 +59,18 @@ button{
   grid-gap: 3px;
 }
 .square{
-  padding:30px;
-  font-size: 25px;
+  padding: 1em;
+  font-size: 1.7em;
   background-color: #A7ACB9;
   color: #1E2329;
 }
 #menuButton{
-  padding: 20px;
+  padding: 15px;
   margin-top:20px;
   font-size: 16px;
   background-color: #A7ACB9;
+  color:#1E2329; 
+  border-radius:5px;
 }
 button.empty { 
   background-color: #1E2329;

@@ -24,6 +24,26 @@ class App extends Component {
           highScore: localState ? localState.highScore : null,
           gameTime: 0,
         };
+    // If there's a startTime in the saved state, start the timer
+    if (this.state.startTime) {
+      this.startTimer();
+    }
+  }
+
+  startTimer() {
+    this.interval = setInterval(() => {
+      this.setState({
+        gameTime: Math.floor((Date.now() - this.state.startTime) / 1000),
+      });
+    }, 1000);
+  }
+
+  formatTime(seconds) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    // Pad the seconds with a 0 if it's less than 10
+    const paddedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+    return `${minutes}:${paddedSeconds}`;
   }
 
   componentDidUpdate() {
@@ -147,7 +167,7 @@ class App extends Component {
   };
 
   render() {
-    const { tiles, win, highScore } = this.state;
+    const { tiles, win, highScore, gameTime } = this.state;
 
     return (
       <div className="App">
@@ -156,8 +176,8 @@ class App extends Component {
         <div className="gameRow">
           <div className="gameColumn">
             <div className="gameRow time">
-              <p>Current: {this.state.gameTime}</p>
-              <p>Best: {highScore ? highScore : "?"}</p>
+              <p>Current: {this.formatTime(gameTime)}</p>
+              <p>Best: {highScore ? this.formatTime(highScore) : "?"}</p>
             </div>
             <div className="grid">
               {tiles.map((tile, i) => (
@@ -175,12 +195,14 @@ class App extends Component {
         <button id="menuButton" onClick={this.resetGame}>
           Reset Board
         </button>
+        
         <button id="menuButton" onClick={this.setWinningState}>
           Set Winning State
         </button>
         <button id="menuButton" onClick={this.resetHighScore}>
           Reset High Score
         </button>
+        
       </div>
     );
   }
