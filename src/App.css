@@ -1,7 +1,12 @@
 .App {
   text-align: center;
+  
 }
-
+#root {
+  background-color: #1E2329;
+  color: #A7ACB9;
+  font-weight: bold;
+}
 .App-logo {
   height: 40vmin;
   pointer-events: none;
@@ -35,4 +40,45 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+button{
+  font-weight: bold;
+  border: none;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-gap: 3px;
+}
+.square{
+  padding:30px;
+  font-size: 25px;
+  background-color: #A7ACB9;
+  color: #1E2329;
+}
+#menuButton{
+  padding: 20px;
+  margin-top:20px;
+  font-size: 16px;
+  background-color: #A7ACB9;
+}
+button.empty { 
+  background-color: #1E2329;
+  border: none;
+}
+.gameRow{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+.time>p{
+  padding-right: 10px;
 }
