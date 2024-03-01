@@ -98,20 +98,23 @@ class App extends Component {
       this.swapTiles(targetIndex);
     }
   };
-  
+
   // Shuffles the tiles array until it meets the conditions for solvability.
   shuffleTiles(tiles) {
     let shuffledTiles;
     let inversionCount;
     let blankRowFromTop;
-    
+
     do {
       shuffledTiles = [...tiles];
       for (let i = shuffledTiles.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
-        [shuffledTiles[i], shuffledTiles[j]] = [shuffledTiles[j], shuffledTiles[i]];
+        [shuffledTiles[i], shuffledTiles[j]] = [
+          shuffledTiles[j],
+          shuffledTiles[i],
+        ];
       }
-  
+
       inversionCount = 0;
       for (let i = 0; i < shuffledTiles.length; i++) {
         if (shuffledTiles[i] === "") continue;
@@ -121,19 +124,15 @@ class App extends Component {
           }
         }
       }
-  
+
       // Calculate the row of the blank tile from the top (1-indexed)
       blankRowFromTop = Math.floor(shuffledTiles.indexOf("") / 4) + 1;
-  
-    // The parity of the inversion count and the blank row from the top must be the same
-    } while (blankRowFromTop % 2 !== inversionCount % 2); 
-    
+
+      // The parity of the inversion count and the blank row from the top must be the same
+    } while (blankRowFromTop % 2 !== inversionCount % 2);
+
     return shuffledTiles;
   }
-  
-  
-  
-  
 
   // Swap a tile with the empty space
   swapTiles = (i) => {
@@ -146,25 +145,49 @@ class App extends Component {
       const distance = Math.abs(emptyIndex - i);
       // Only swap if the tile is adjacent to the empty space
       if (distance === 1 || distance === 4) {
-        // Swap the clicked tile and the empty tile
-        [tiles[i], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[i]];
-        // Update the state with the new tiles
-        this.setState({ tiles }, () => {
-          // Start the timer when the first move is made
-          if (!this.state.startTime) {
-            const startTime = Date.now();
-            this.setState({ startTime });
-            this.interval = setInterval(() => {
-              this.setState({
-                gameTime: Math.floor(
-                  (Date.now() - this.state.startTime) / 1000
-                ),
-              });
-            }, 1000);
-          }
-          // Check if the game is won after each move
-          this.checkWin();
-        });
+        // Calculate the row and column of the clicked tile and the empty tile
+      const clickedTileRow = Math.floor(i / 4);
+      const clickedTileColumn = i % 4;
+      const emptyTileRow = Math.floor(emptyIndex / 4);
+      const emptyTileColumn = emptyIndex % 4;
+      // Calculate the distance to move the tiles in terms of rows and columns
+      const distanceRow = clickedTileRow - emptyTileRow;
+      const distanceColumn = clickedTileColumn - emptyTileColumn;
+      // Get the clicked tile and the empty tile elements
+      const clickedTile = document.getElementById(`tile-${i}`);
+      const emptyTile = document.getElementById(`tile-${emptyIndex}`);
+      // set the css transition and transform values
+      clickedTile.style.transition = `all 0.04s linear`;
+      clickedTile.style.transform = `translate(${-distanceColumn * clickedTile.offsetWidth}px, ${-distanceRow * clickedTile.offsetHeight}px)`;
+      
+      // Wait for the transition to complete before swapping the tiles
+        setTimeout(() => {
+          // Swap the clicked tile and the empty tile
+          [tiles[i], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[i]];
+          // Update the state with the new tiles
+          this.setState({ tiles }, () => {
+            requestAnimationFrame(() => {
+              clickedTile.style.transition = "";
+              emptyTile.style.transition = "";
+              clickedTile.style.transform = "";
+              emptyTile.style.transform = "";
+            });
+            // Start the timer when the first move is made
+            if (!this.state.startTime) {
+              const startTime = Date.now();
+              this.setState({ startTime });
+              this.interval = setInterval(() => {
+                this.setState({
+                  gameTime: Math.floor(
+                    (Date.now() - this.state.startTime) / 1000
+                  ),
+                });
+              }, 1000);
+            }
+            // Check if the game is won after each move
+            this.checkWin();
+          });
+        }, 40 );
       }
     }
   };
@@ -240,6 +263,7 @@ class App extends Component {
             <div className="grid">
               {tiles.map((tile, i) => (
                 <button
+                  id={`tile-${i}`}
                   key={i}
                   onClick={() => this.swapTiles(i)}
                   // class is either square or empty depending on the tile number
