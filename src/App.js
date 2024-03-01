@@ -13,6 +13,7 @@ import "./App.css";
 class App extends Component {
   constructor() {
     super();
+    // Initialize state from local storage if it exists, otherwise set default state
     const localState = JSON.parse(localStorage.getItem("gameState"));
     this.state = localState
       ? localState
@@ -30,6 +31,7 @@ class App extends Component {
     }
   }
 
+  // Start the timer to keep track of game time
   startTimer() {
     this.interval = setInterval(() => {
       this.setState({
@@ -38,6 +40,7 @@ class App extends Component {
     }, 1000);
   }
 
+  // Format time from seconds to minutes and seconds
   formatTime(seconds) {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -46,20 +49,28 @@ class App extends Component {
     return `${minutes}:${paddedSeconds}`;
   }
 
+  // Save the current game state to local storage whenever it updates
   componentDidUpdate() {
     localStorage.setItem("gameState", JSON.stringify(this.state));
   }
+
+  // Add event listener for keyboard input when the component mounts
   componentDidMount() {
     window.addEventListener("keydown", this.handleKeyDown);
   }
+
+  // Remove the event listener when the component unmounts to prevent memory leaks
   componentWillUnmount() {
     window.removeEventListener("keydown", this.handleKeyDown);
   }
+
+  // Handle keyboard input to move tiles
   handleKeyDown = (e) => {
     const { tiles } = this.state;
     const emptyIndex = tiles.indexOf("");
     let targetIndex;
 
+    // Determine which tile to move based on the arrow key pressed
     switch (e.key) {
       case "ArrowLeft":
         // Prevent the empty tile from moving to the right when it's on the right edge
@@ -81,11 +92,13 @@ class App extends Component {
         return;
     }
 
+    // Move the tile if the target index is within the grid
     if (targetIndex >= 0 && targetIndex < 16) {
       this.swapTiles(targetIndex);
     }
   };
 
+  // Randomly shuffle the tiles
   shuffleTiles(tiles) {
     for (let i = tiles.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -94,15 +107,24 @@ class App extends Component {
     return tiles;
   }
 
+  // Swap a tile with the empty space
   swapTiles = (i) => {
+    // If the game is already won, no need to swap tiles
     if (!this.state.win) {
+      // Create a copy of the current tiles
       const tiles = [...this.state.tiles];
+      // Find the index of the empty tile
       const emptyIndex = tiles.indexOf("");
+      // Calculate the distance between the clicked tile and the empty tile
       const distance = Math.abs(emptyIndex - i);
 
+      // Only swap if the tile is adjacent to the empty space
       if (distance === 1 || distance === 4) {
+        // Swap the clicked tile and the empty tile
         [tiles[i], tiles[emptyIndex]] = [tiles[emptyIndex], tiles[i]];
+        // Update the state with the new tiles
         this.setState({ tiles }, () => {
+          // Start the timer when the first move is made
           if (!this.state.startTime) {
             const startTime = Date.now();
             this.setState({ startTime });
@@ -114,14 +136,17 @@ class App extends Component {
               });
             }, 1000);
           }
+          // Check if the game is won after each move
           this.checkWin();
         });
       }
     }
   };
-
+  // Check if the current state of the tiles is the winning state
   checkWin() {
+    // If the tiles are in the correct order, the game is won
     if (this.state.tiles.join(",") === "0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,") {
+      // Stop the timer
       clearInterval(this.interval);
       const { startTime, highScore } = this.state;
       if (startTime) {
@@ -139,8 +164,11 @@ class App extends Component {
     }
   }
 
+  // Reset the game to the initial state
   resetGame = () => {
+    // Stop the timer
     clearInterval(this.interval);
+    // Reset the state
     this.setState({
       tiles: this.shuffleTiles([...Array(15).keys(), ""]),
       win: false,
@@ -149,15 +177,19 @@ class App extends Component {
       gameTime: 0,
     });
   };
-
+  // Reset the high score
   resetHighScore = () => {
+    // Set the high score in the state to null
     this.setState({ highScore: null });
+    // Update the high score in local storage
     const gameState = JSON.parse(localStorage.getItem("gameState"));
     gameState.highScore = null;
     localStorage.setItem("gameState", JSON.stringify(gameState));
   };
 
+  // Set the state to the winning state
   setWinningState = () => {
+    // Set the tiles in the correct order and check if the game is won
     this.setState(
       {
         tiles: Array.from({ length: 15 }, (_, i) => i).concat(""),
