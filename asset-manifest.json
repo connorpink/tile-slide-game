@@ -1,15 +1,15 @@
 {
   "files": {
-    "main.css": "/the-slide-game/static/css/main.feca0b02.css",
-    "main.js": "/the-slide-game/static/js/main.93afb58a.js",
-    "static/js/453.711150db.chunk.js": "/the-slide-game/static/js/453.711150db.chunk.js",
-    "index.html": "/the-slide-game/index.html",
-    "main.feca0b02.css.map": "/the-slide-game/static/css/main.feca0b02.css.map",
-    "main.93afb58a.js.map": "/the-slide-game/static/js/main.93afb58a.js.map",
-    "453.711150db.chunk.js.map": "/the-slide-game/static/js/453.711150db.chunk.js.map"
+    "main.css": "/tile-slide-game/static/css/main.feca0b02.css",
+    "main.js": "/tile-slide-game/static/js/main.e0774f47.js",
+    "static/js/453.711150db.chunk.js": "/tile-slide-game/static/js/453.711150db.chunk.js",
+    "index.html": "/tile-slide-game/index.html",
+    "main.feca0b02.css.map": "/tile-slide-game/static/css/main.feca0b02.css.map",
+    "main.e0774f47.js.map": "/tile-slide-game/static/js/main.e0774f47.js.map",
+    "453.711150db.chunk.js.map": "/tile-slide-game/static/js/453.711150db.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.feca0b02.css",
-    "static/js/main.93afb58a.js"
+    "static/js/main.e0774f47.js"
   ]
 }
