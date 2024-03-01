@@ -45,7 +45,8 @@ class App extends Component {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     // Pad the seconds with a 0 if it's less than 10
-    const paddedSeconds = remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
+    const paddedSeconds =
+      remainingSeconds < 10 ? `0${remainingSeconds}` : remainingSeconds;
     return `${minutes}:${paddedSeconds}`;
   }
 
@@ -97,27 +98,52 @@ class App extends Component {
       this.swapTiles(targetIndex);
     }
   };
-
-  // Randomly shuffle the tiles
+  
+  // Shuffles the tiles array until it meets the conditions for solvability.
   shuffleTiles(tiles) {
-    for (let i = tiles.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
-    }
-    return tiles;
+    let shuffledTiles;
+    let inversionCount;
+    let blankRowFromTop;
+    
+    do {
+      shuffledTiles = [...tiles];
+      for (let i = shuffledTiles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledTiles[i], shuffledTiles[j]] = [shuffledTiles[j], shuffledTiles[i]];
+      }
+  
+      inversionCount = 0;
+      for (let i = 0; i < shuffledTiles.length; i++) {
+        if (shuffledTiles[i] === "") continue;
+        for (let j = i + 1; j < shuffledTiles.length; j++) {
+          if (shuffledTiles[j] !== "" && shuffledTiles[i] > shuffledTiles[j]) {
+            inversionCount++;
+          }
+        }
+      }
+  
+      // Calculate the row of the blank tile from the top (1-indexed)
+      blankRowFromTop = Math.floor(shuffledTiles.indexOf("") / 4) + 1;
+  
+    // The parity of the inversion count and the blank row from the top must be the same
+    } while (blankRowFromTop % 2 !== inversionCount % 2); 
+    
+    return shuffledTiles;
   }
+  
+  
+  
+  
 
   // Swap a tile with the empty space
   swapTiles = (i) => {
     // If the game is already won, no need to swap tiles
     if (!this.state.win) {
-      // Create a copy of the current tiles
       const tiles = [...this.state.tiles];
       // Find the index of the empty tile
       const emptyIndex = tiles.indexOf("");
       // Calculate the distance between the clicked tile and the empty tile
       const distance = Math.abs(emptyIndex - i);
-
       // Only swap if the tile is adjacent to the empty space
       if (distance === 1 || distance === 4) {
         // Swap the clicked tile and the empty tile
@@ -216,6 +242,7 @@ class App extends Component {
                 <button
                   key={i}
                   onClick={() => this.swapTiles(i)}
+                  // class is either square or empty depending on the tile number
                   className={tile === "" ? "empty" : "square"}
                 >
                   {tile !== "" ? tile + 1 : ""}

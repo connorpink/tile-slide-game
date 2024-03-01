@@ -1,3 +1,18 @@
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-gap: 2px;
+  }
+  .square {
+    padding: 0.5em;
+    font-size: 1em;
+  }
+  #menuButton {
+    padding: 10px;
+    margin-top: 10px;
+    font-size: 12px;
+  }
+}
 .App {
   text-align: center;
   
