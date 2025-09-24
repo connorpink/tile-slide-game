@@ -24,6 +24,8 @@ class App extends Component {
           endTime: null,
           highScore: localState ? localState.highScore : null,
           gameTime: 0,
+          solving: false,
+          solutionStats: null,
         };
     // If there's a startTime in the saved state, start the timer
     if (this.state.startTime) {
@@ -200,6 +202,8 @@ class App extends Component {
       startTime: null,
       endTime: null,
       gameTime: 0,
+      solving: false,
+      solutionStats: null,
     });
   };
   // Reset the high score
@@ -223,8 +227,231 @@ class App extends Component {
     );
   };
 
+  // Manhattan distance heuristic for A*
+  manhattanDistance = (tiles) => {
+    let distance = 0;
+    for (let i = 0; i < tiles.length; i++) {
+      if (tiles[i] !== "") {
+        const value = tiles[i];
+        const currentRow = Math.floor(i / 4);
+        const currentCol = i % 4;
+        const targetRow = Math.floor(value / 4);
+        const targetCol = value % 4;
+        distance += Math.abs(currentRow - targetRow) + Math.abs(currentCol - targetCol);
+      }
+    }
+    return distance;
+  };
+
+  // Get possible moves from current state
+  getNeighbors = (tiles) => {
+    const neighbors = [];
+    const emptyIndex = tiles.indexOf("");
+    const row = Math.floor(emptyIndex / 4);
+    const col = emptyIndex % 4;
+
+    // Define possible moves: up, down, left, right
+    const moves = [
+      { dr: -1, dc: 0 }, // up
+      { dr: 1, dc: 0 },  // down
+      { dr: 0, dc: -1 }, // left
+      { dr: 0, dc: 1 }   // right
+    ];
+
+    moves.forEach(({ dr, dc }) => {
+      const newRow = row + dr;
+      const newCol = col + dc;
+
+      if (newRow >= 0 && newRow < 4 && newCol >= 0 && newCol < 4) {
+        const newIndex = newRow * 4 + newCol;
+        const newTiles = [...tiles];
+        [newTiles[emptyIndex], newTiles[newIndex]] = [newTiles[newIndex], newTiles[emptyIndex]];
+        neighbors.push({ tiles: newTiles, move: newIndex });
+      }
+    });
+
+    return neighbors;
+  };
+
+  // Beam search solver - fast and practical for sliding puzzles
+  solvePuzzle = async () => {
+    if (this.state.solving || this.state.win) return;
+
+    this.setState({ solving: true, solutionStats: null });
+    const startTime = performance.now();
+
+    try {
+      const targetString = Array.from({ length: 15 }, (_, i) => i).concat("").join(",");
+
+      if (this.state.tiles.join(",") === targetString) {
+        this.setState({ solving: false });
+        return;
+      }
+
+      console.log("Starting Beam Search solver...");
+
+      // Use beam search - keeps only the best N candidates at each level
+      const result = await this.beamSearchSolve(this.state.tiles, targetString);
+
+      if (result.found) {
+        const endTime = performance.now();
+        const solutionStats = {
+          moves: result.path.length,
+          nodesExplored: result.nodesExplored,
+          timeTaken: Math.round(endTime - startTime)
+        };
+
+        console.log("Solution found!", solutionStats);
+        await this.executeSolution(result.path, solutionStats);
+      } else {
+        console.log("No solution found - trying fallback approach");
+        // Fallback to simple heuristic solver
+        const fallbackResult = await this.greedySolve(this.state.tiles, targetString);
+
+        if (fallbackResult.found) {
+          const endTime = performance.now();
+          const solutionStats = {
+            moves: fallbackResult.path.length,
+            nodesExplored: fallbackResult.nodesExplored,
+            timeTaken: Math.round(endTime - startTime),
+            note: "Non-optimal solution"
+          };
+
+          console.log("Fallback solution found!", solutionStats);
+          await this.executeSolution(fallbackResult.path, solutionStats);
+        } else {
+          this.setState({ solving: false });
+        }
+      }
+
+    } catch (error) {
+      console.error("Error in solver:", error);
+      this.setState({ solving: false });
+    }
+  };
+
+  // Beam search with limited candidates per depth level
+  beamSearchSolve = async (startTiles, targetString) => {
+    let currentBeam = [{
+      tiles: startTiles,
+      path: [],
+      depth: 0,
+      heuristic: this.manhattanDistance(startTiles)
+    }];
+
+    const visited = new Set();
+    visited.add(startTiles.join(","));
+
+    let nodesExplored = 0;
+    const beamWidth = 100; // Keep top 100 candidates
+    const maxDepth = 100;
+
+    for (let depth = 0; depth < maxDepth && currentBeam.length > 0; depth++) {
+      console.log(`Depth ${depth}, beam size: ${currentBeam.length}`);
+
+      let nextBeam = [];
+
+      for (const current of currentBeam) {
+        nodesExplored++;
+
+        if (current.tiles.join(",") === targetString) {
+          return { found: true, path: current.path, nodesExplored };
+        }
+
+        const neighbors = this.getNeighbors(current.tiles);
+
+        for (const neighbor of neighbors) {
+          const stateString = neighbor.tiles.join(",");
+
+          if (!visited.has(stateString)) {
+            visited.add(stateString);
+            nextBeam.push({
+              tiles: neighbor.tiles,
+              path: [...current.path, neighbor.move],
+              depth: current.depth + 1,
+              heuristic: this.manhattanDistance(neighbor.tiles)
+            });
+          }
+        }
+      }
+
+      // Keep only the best candidates (beam search)
+      nextBeam.sort((a, b) => a.heuristic - b.heuristic);
+      currentBeam = nextBeam.slice(0, beamWidth);
+
+      // Yield control periodically
+      if (depth % 5 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    }
+
+    return { found: false, nodesExplored };
+  };
+
+  // Simple greedy solver as fallback
+  greedySolve = async (startTiles, targetString) => {
+    let currentTiles = [...startTiles];
+    let path = [];
+    let nodesExplored = 0;
+    const maxMoves = 500;
+
+    console.log("Using greedy fallback solver...");
+
+    while (path.length < maxMoves && currentTiles.join(",") !== targetString) {
+      const neighbors = this.getNeighbors(currentTiles);
+
+      // Find the neighbor that reduces Manhattan distance most
+      let bestNeighbor = null;
+      let bestHeuristic = Infinity;
+
+      for (const neighbor of neighbors) {
+        const h = this.manhattanDistance(neighbor.tiles);
+        if (h < bestHeuristic) {
+          bestHeuristic = h;
+          bestNeighbor = neighbor;
+        }
+      }
+
+      if (!bestNeighbor) break;
+
+      currentTiles = bestNeighbor.tiles;
+      path.push(bestNeighbor.move);
+      nodesExplored++;
+
+      // Yield control periodically
+      if (nodesExplored % 50 === 0) {
+        await new Promise(resolve => setTimeout(resolve, 5));
+      }
+    }
+
+    return {
+      found: currentTiles.join(",") === targetString,
+      path,
+      nodesExplored
+    };
+  };
+
+  // Execute the solution moves with animation
+  executeSolution = async (moves, stats) => {
+    try {
+      for (let i = 0; i < moves.length; i++) {
+        if (!this.state.solving) break; // Allow cancellation
+        await new Promise(resolve => setTimeout(resolve, 300));
+        this.swapTiles(moves[i]);
+      }
+
+      this.setState({
+        solving: false,
+        solutionStats: stats
+      });
+    } catch (error) {
+      console.error("Error executing solution:", error);
+      this.setState({ solving: false });
+    }
+  };
+
   render() {
-    const { tiles, win, highScore, gameTime } = this.state;
+    const { tiles, win, highScore, gameTime, solving, solutionStats } = this.state;
 
     return (
       <div className="App">
@@ -253,6 +480,32 @@ class App extends Component {
         </div>
         <button id="menuButton" onClick={this.resetGame}>
           Reset Board
+        </button>
+        <button
+          id="menuButton"
+          onClick={this.solvePuzzle}
+          disabled={solving || win}
+        >
+          {solving ? "Solving..." : "Auto Solve"}
+        </button>
+        {solutionStats && (
+          <div className="solution-stats">
+            <h3>Solution Complete!</h3>
+            <p>Moves: {solutionStats.moves}</p>
+            <p>Nodes Explored: {solutionStats.nodesExplored}</p>
+            <p>Time: {solutionStats.timeTaken}ms</p>
+            {solutionStats.note && <p style={{color: '#FFA500'}}>{solutionStats.note}</p>}
+          </div>
+        )}
+        <button
+          id="menuButton"
+          onClick={() => {
+            // Set to a nearly solved state for testing
+            const testTiles = [0,1,2,3,4,5,6,7,8,9,10,11,13,14,"",12];
+            this.setState({ tiles: testTiles, win: false, solutionStats: null });
+          }}
+        >
+          Test State
         </button>
         {/*
         <button id="menuButton" onClick={this.setWinningState}>

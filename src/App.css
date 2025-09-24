@@ -62,3 +62,17 @@ button.empty {
 .time>p{
   padding-right: 10px;
 }
+.solution-stats{
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #2D3440;
+  border-radius: 10px;
+  border: 2px solid #A7ACB9;
+}
+.solution-stats h3{
+  color: #7AC142;
+  margin-top: 0;
+}
+.solution-stats p{
+  margin: 5px 0;
+}
