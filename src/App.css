@@ -133,7 +133,7 @@ button.empty {
 
 .results-table {
   display: grid;
-  /* grid-template-columns: 60px 120px 100px 80px 100px 80px; */
+  grid-template-columns: 60px 120px 100px 80px 100px 80px;
   gap: 10px;
   margin: 20px 0;
 }
